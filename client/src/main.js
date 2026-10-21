@@ -1292,7 +1292,8 @@ function lobbyCounts() {
     setPadInfo(S, lobbyCountsV);
     if (countsT > 0) return;
     countsT = 8;
-    const base = String(lastEndpoint || SERVER_URL).replace(/^ws/, 'http').replace(/\/$/, '');
+    // straight from the game's host (Bloxity's matchmaking gateway only passes the room traffic)
+    const base = String(SERVER_URL).replace(/^ws/, 'http').replace(/\/$/, '');
     fetch(base + '/api/rooms', { cache: 'no-store' }).then((r) => r.json()).then((m) => { lobbyCountsV = m || {}; }).catch(() => {});
 }
 // a falling chunk hit the ground: it shatters (and drops its cubes for whoever cut it loose)
