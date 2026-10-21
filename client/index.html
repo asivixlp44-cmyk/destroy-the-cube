@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>[ASMR] Destroy the Cube!</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='10' y='10' width='80' height='80' rx='18' fill='%235ab4f0' stroke='%2310203a' stroke-width='6'/%3E%3Crect x='22' y='22' width='26' height='26' rx='6' fill='%23ffd21e'/%3E%3Crect x='52' y='52' width='26' height='26' rx='6' fill='%23d23cff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Montserrat:wght@800;900&display=swap">
+<style>
+:root {
+    color-scheme: light;
+    --ink: #10203a;
+    --yellow: #ffd21e;
+    --green: #46ec50;
+    --red: #ff3a4a;
+    --blue: #2a8aff;
+    --cyan: #3ad8ff;
+    --white: #ffffff;
+    --font: "Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+    font-size: clamp(9px, calc(100vmin / 56), 17px);
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #7ac8ff; }
+body { font-family: var(--font); color: var(--white); user-select: none; -webkit-user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
+#app { position: fixed; inset: 0; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+#speedLines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 62%, rgba(10, 30, 70, 0.22) 100%); }
+button { font-family: var(--font); cursor: pointer; color: var(--white); }
+button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.o { text-shadow: -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 2px 2px 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 3px 0 var(--ink); }
+.o1 { text-shadow: -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 1px 1px 0 var(--ink), 0 1.5px 0 var(--ink); }
+.btn {
+    border: 3px solid var(--ink); border-radius: 0.8rem; font-weight: 700;
+    box-shadow: inset 0 -0.3rem 0 rgba(0, 0, 0, 0.2), inset 0 0.2rem 0 rgba(255, 255, 255, 0.4), 0 0.2rem 0 var(--ink);
+    transition: transform 0.18s cubic-bezier(0.34, 1.8, 0.5, 1), filter 0.15s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.04); filter: brightness(1.08); }
+.btn:active:not(:disabled) { transform: translateY(2px) scale(0.95); transition-duration: 0.06s; }
+.btn:disabled { filter: grayscale(0.7) brightness(0.85); cursor: default; }
+.g-yellow { background: linear-gradient(#fff07a, #ffc414); }
+.g-green { background: linear-gradient(#8aff7a, #22c73a); }
+.g-blue { background: linear-gradient(#7ae6ff, #1f8fff); }
+.g-red { background: linear-gradient(#ff7a8a, #e8182c); }
+.g-purple { background: linear-gradient(#e27bff, #8a1cff); }
+.g-orange { background: linear-gradient(#ffc06a, #ff6a1a); }
+.g-grey { background: linear-gradient(#c8d0dc, #7a8498); }
+.g-pink { background: linear-gradient(#ffb0e8, #ff4ab8); }
+@keyframes shine { 0%, 80% { transform: translateX(-130%) skewX(-20deg); } 100% { transform: translateX(170%) skewX(-20deg); } }
+@keyframes pulse { 50% { transform: scale(1.07); } }
+@keyframes bob { 50% { transform: translateY(-0.25rem); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.coin { display: inline-block; width: 1em; height: 1em; border-radius: 0.22em; background: linear-gradient(135deg, #fff6a8, #ffd21e 45%, #e89a08); border: 0.09em solid #8a5a00; box-shadow: inset 0 -0.1em 0 rgba(0,0,0,0.15); vertical-align: -0.12em; }
+.cup { display: inline-block; width: 0.9em; height: 0.9em; margin-right: 0.12em; border-radius: 0.2em; background: linear-gradient(135deg, #fff6a8, #ffd21e 45%, #e89a08); border: 0.08em solid #8a5a00; vertical-align: -0.1em; }
+
+/* HUD ------------------------------------------------------------------ */
+#hud { position: absolute; inset: 0; pointer-events: none; }
+#hud > * { pointer-events: auto; }
+#hud .passive { pointer-events: none; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#dmgEdge { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(255, 220, 80, 0.5) 100%); transition: opacity 0.3s ease; }
+
+/* top centre: the cube's progress, its name and timer, the tutorial step */
+#topBar { position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 0.55rem); transform: translateX(-50%); display: grid; justify-items: center; gap: 0.3rem; width: min(30rem, 52vw); pointer-events: none; }
+#topBar > * { pointer-events: auto; }
+#progress { position: relative; width: 100%; height: 1.9rem; border-radius: 1rem; border: 0.2rem solid var(--ink); background: linear-gradient(#cdeeff, #9ad8ff); overflow: hidden; box-shadow: 0 0.2rem 0 var(--ink), inset 0 0.2rem 0 rgba(255,255,255,0.6); }
+#progFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(#7af0ff, #1aa8f0); box-shadow: inset 0 -0.25rem 0 rgba(0,0,0,0.12), inset 0 0.2rem 0 rgba(255,255,255,0.5); transition: width 0.35s ease; }
+#progTxt { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.15rem; font-weight: 700; }
+#progress .sheen { position: absolute; top: 0; bottom: 0; width: 25%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent); animation: shine 4s ease-in-out infinite; }
+#cubeLine { font-size: 1rem; font-weight: 700; padding: 0.05rem 0.8rem; border-radius: 1rem; background: rgba(16, 32, 58, 0.45); white-space: nowrap; }
+#tutBanner { display: grid; justify-items: center; gap: 0.15rem; margin-top: 0.35rem; pointer-events: none; }
+#tutTxt { font-size: 2.3rem; font-weight: 700; white-space: nowrap; }
+#tutTip { font-size: 1rem; font-weight: 600; }
+#tutBar { width: 70%; height: 0.45rem; border-radius: 1rem; background: rgba(255,255,255,0.35); overflow: hidden; }
+#tutBar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #46ec50, #a8ff7a); transition: width 0.3s ease; }
+#chips { display: flex; gap: 0.35rem; flex-wrap: wrap; justify-content: center; }
+.chip { font-size: 0.95rem; font-weight: 700; padding: 0.08rem 0.55rem; border-radius: 0.8rem; border: 2px solid var(--ink); background: linear-gradient(#5ab4ff, #2a6ae8); white-space: nowrap; }
+#giftChip { cursor: pointer; background: linear-gradient(#ff8ab8, #e8287a); }
+#giftChip.ready { background: linear-gradient(#8aff7a, #22c73a); animation: pulse 0.9s ease-in-out infinite; }
+
+/* left: Coins, Gems, the quests (below the Bloxity overlay's corner) */
+#leftCol { position: absolute; left: max(0.9rem, calc(env(safe-area-inset-left, 0px) + 0.5rem)); top: max(8.5rem, 21vh); display: grid; gap: 0.45rem; justify-items: start; }
+.pill { position: relative; display: flex; align-items: center; gap: 0.45rem; height: 2.7rem; min-width: 9rem; padding: 0 1rem 0 0.5rem; border: 0.2rem solid var(--ink); border-radius: 1.5rem; background: linear-gradient(#7ae0ff, #2aa8f0); box-shadow: inset 0 0.2rem 0 rgba(255,255,255,0.55), inset 0 -0.25rem 0 rgba(0,0,0,0.12), 0 0.2rem 0 var(--ink); font-size: 1.5rem; font-weight: 700; transition: transform 0.18s cubic-bezier(0.34, 1.8, 0.5, 1); }
+.pill:hover { transform: scale(1.05); }
+.pill .coin, .pill .gemI { font-size: 2rem; margin-left: -0.9rem; filter: drop-shadow(0 0.15rem 0 rgba(0,0,0,0.25)); }
+.pill .gemI { line-height: 1; }
+.pill b { font-variant-numeric: tabular-nums; }
+.pill .plus { position: absolute; right: -0.7rem; top: 50%; transform: translateY(-50%); width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--ink); background: linear-gradient(#8aff7a, #22c73a); display: grid; place-items: center; font-size: 1.1rem; line-height: 1; }
+.pill.bump { animation: bump 0.45s cubic-bezier(0.34, 1.8, 0.5, 1); }
+@keyframes bump { 35% { transform: scale(1.18); } }
+#gemPill { background: linear-gradient(#e8a8ff, #a84aff); min-width: 7rem; }
+#quests { display: grid; gap: 0.3rem; margin-top: 0.3rem; }
+.quest { display: flex; align-items: center; gap: 0.5rem; font-size: 1.25rem; font-weight: 700; }
+.quest .box { width: 1.6rem; height: 1.6rem; border-radius: 0.35rem; border: 0.18rem solid var(--ink); background: rgba(16,32,58,0.35); display: grid; place-items: center; font-size: 1rem; flex: none; }
+.quest.done .box { background: linear-gradient(#8aff7a, #22c73a); }
+.quest.done span:last-child { color: #8aff7a; }
+.quest small { font-size: 0.85rem; color: #e8d0ff; margin-left: 0.2rem; }
+
+/* the backpack */
+#bag { position: absolute; left: max(0.9rem, calc(env(safe-area-inset-left, 0px) + 0.5rem)); bottom: max(1rem, env(safe-area-inset-bottom, 0px)); width: 6.4rem; height: 6.6rem; padding: 0; border: 0; background: none; display: grid; place-items: center; }
+#bag .bagIc { font-size: 4.6rem; line-height: 1; filter: drop-shadow(0 0.25rem 0 rgba(16,32,58,0.45)); transition: transform 0.2s ease; }
+#bag b { position: absolute; left: 50%; bottom: 0.7rem; transform: translateX(-50%); font-size: 1.55rem; font-weight: 700; white-space: nowrap; }
+#bag small { position: absolute; left: 50%; top: -0.3rem; transform: translateX(-50%); font-size: 0.95rem; font-weight: 700; color: #ffe24a; white-space: nowrap; }
+#bag.full .bagIc { animation: bagShake 0.5s ease infinite; filter: drop-shadow(0 0 0.6rem #ff3a4a); }
+#bag.full b { color: #ff7a8a; }
+@keyframes bagShake { 25% { transform: rotate(-8deg) scale(1.06); } 75% { transform: rotate(8deg) scale(1.06); } }
+#fullTag { position: absolute; right: -4.8rem; top: 1.6rem; font-size: 1.1rem; font-weight: 700; color: #fff; padding: 0.1rem 0.55rem; border-radius: 0.6rem; border: 2px solid var(--ink); background: linear-gradient(#ff7a8a, #e8182c); white-space: nowrap; animation: pulse 0.8s ease-in-out infinite; }
+
+/* right: the big buttons */
+#rightCol { position: absolute; right: max(0.8rem, calc(env(safe-area-inset-right, 0px) + 0.4rem)); top: max(8rem, 20vh); display: grid; gap: 0.5rem; justify-items: center; }
+.side { position: relative; width: 6rem; padding: 0; border: 0; background: none; display: grid; justify-items: center; gap: 0.05rem; transition: transform 0.18s cubic-bezier(0.34, 1.8, 0.5, 1); }
+.side:hover { transform: scale(1.08); }
+.side:active { transform: scale(0.92); }
+.side .ic { width: 3.6rem; height: 3.6rem; display: grid; place-items: center; font-size: 2.3rem; border-radius: 1rem; border: 0.2rem solid var(--ink); background: linear-gradient(#ffffff, #b8e8ff); box-shadow: inset 0 -0.3rem 0 rgba(0,0,0,0.1), 0 0.2rem 0 var(--ink); }
+.side .lb { font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.side .price { position: absolute; right: -0.3rem; top: -0.4rem; font-size: 0.8rem; font-weight: 700; padding: 0 0.35rem; border-radius: 0.6rem; border: 2px solid var(--ink); background: linear-gradient(#e8a8ff, #a84aff); }
+.side.offer .ic { background: linear-gradient(#e8f8ff, #8ad8ff); animation: bob 1.6s ease-in-out infinite; }
+.badge { position: absolute; top: -0.3rem; right: 0.4rem; background: var(--red); border: 2px solid var(--ink); border-radius: 1rem; font-size: 0.78rem; padding: 0.02rem 0.36rem; font-weight: 700; z-index: 2; color: #fff; animation: pulse 0.9s ease-in-out infinite; }
+
+/* top right: the menu icons (the top left is the Bloxity overlay's) */
+#iconRow { position: absolute; right: max(0.6rem, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 0.55rem); display: flex; gap: 0.3rem; }
+.ib { position: relative; width: 3.3rem; height: 3.75rem; padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s cubic-bezier(0.34, 1.8, 0.5, 1); }
+.ib .bub { display: grid; place-items: center; width: 2.8rem; height: 2.8rem; margin: 0 auto; border-radius: 0.9rem; border: 0.18rem solid var(--ink); background: var(--bg, linear-gradient(#fff, #d8e8ff)); font-size: 1.45rem; box-shadow: inset 0 0.2rem 0 rgba(255,255,255,0.6), inset 0 -0.25rem 0 rgba(0,0,0,0.12), 0 0.18rem 0 var(--ink); }
+.ib .lb { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); font-size: 0.72rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.ib:hover { transform: translateY(-2px) scale(1.08); }
+.ib:active { transform: translateY(1px) scale(0.92); }
+.ib .badge { right: -0.2rem; }
+#fps { position: absolute; right: max(1rem, env(safe-area-inset-right, 0px)); bottom: 0.4rem; font-size: 0.85rem; font-weight: 700; color: #7dff6b; }
+#friendBoost { position: absolute; right: max(1rem, env(safe-area-inset-right, 0px)); bottom: 1.6rem; font-size: 0.95rem; font-weight: 700; }
+
+/* bottom centre: the ball types (hotbar) and the blaster's name */
+#hotbar { position: absolute; left: 50%; bottom: max(0.6rem, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: grid; justify-items: center; gap: 1.35rem; }
+#gunName { font-size: 0.95rem; font-weight: 700; }
+#slots { display: flex; gap: 0.45rem; }
+.slot { position: relative; width: 4.1rem; height: 4.1rem; border-radius: 0.7rem; border: 0.2rem solid rgba(255,255,255,0.85); background: rgba(16, 32, 58, 0.45); display: grid; place-items: center; padding: 0; overflow: visible; box-shadow: 0 0.2rem 0 rgba(16,32,58,0.5); }
+.slot .ball { width: 2.7rem; height: 2.7rem; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, var(--c) 45%, color-mix(in srgb, var(--c) 60%, #000) 100%); box-shadow: 0 0 0.6rem var(--c); }
+.slot .n { position: absolute; top: -1.15rem; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.slot .k { position: absolute; left: 0.2rem; bottom: 0.05rem; font-size: 0.7rem; font-weight: 700; opacity: 0.9; }
+.slot.on { border-color: #fff; background: rgba(58, 216, 255, 0.45); box-shadow: 0 0 0 0.15rem var(--ink), 0 0 1rem rgba(120,230,255,0.9); transform: translateY(-0.2rem); }
+.slot.lock .ball { filter: grayscale(0.8) brightness(0.6); }
+.slot.lock::after { content: '🔒'; position: absolute; font-size: 1.4rem; }
+.slot.empty .ball { opacity: 0.45; }
+
+#crosshair { position: absolute; left: 50%; top: 50%; width: 1.5rem; height: 1.5rem; margin: -0.75rem 0 0 -0.75rem; border: 0.16rem solid rgba(255,255,255,0.95); border-radius: 50%; box-shadow: 0 0 0 1px rgba(16,32,58,0.6), inset 0 0 0 1px rgba(16,32,58,0.4); pointer-events: none; transition: transform 0.08s ease; }
+#crosshair i { position: absolute; left: 50%; top: 50%; width: 0.26rem; height: 0.26rem; margin: -0.13rem; background: #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(16,32,58,0.6); }
+#crosshair.on { border-color: #ffe24a; transform: scale(1.15); }
+#crosshair.kick { transform: scale(1.35); }
+/* hit markers: an X on the crosshair (gold when a block breaks) */
+#hitX { position: absolute; left: 50%; top: 50%; width: 2.8rem; height: 2.8rem; margin: -1.4rem 0 0 -1.4rem; pointer-events: none; opacity: 0; }
+#hitX i { position: absolute; left: 50%; top: 50%; width: 0.75rem; height: 0.2rem; margin: -0.1rem 0 0 -0.375rem; background: #fff; border-radius: 0.1rem; box-shadow: 0 0 0 1px rgba(16,32,58,0.75); }
+#hitX i:nth-child(1) { transform: rotate(45deg) translateX(0.95rem); }
+#hitX i:nth-child(2) { transform: rotate(135deg) translateX(0.95rem); }
+#hitX i:nth-child(3) { transform: rotate(225deg) translateX(0.95rem); }
+#hitX i:nth-child(4) { transform: rotate(315deg) translateX(0.95rem); }
+#hitX.on { animation: hitx 0.22s ease-out; }
+#hitX.kill { animation: hitk 0.34s ease-out; }
+#hitX.kill i { background: #ffd23a; width: 1rem; margin-left: -0.5rem; }
+@keyframes hitx { 0% { opacity: 1; transform: scale(1.35); } 100% { opacity: 0; transform: scale(0.9); } }
+@keyframes hitk { 0% { opacity: 1; transform: scale(1.7); } 100% { opacity: 0; transform: scale(1) rotate(15deg); } }
+/* the block you're aiming at */
+#target { position: absolute; left: 50%; top: calc(50% + 2.3rem); transform: translateX(-50%); display: grid; justify-items: center; gap: 0.14rem; pointer-events: none; }
+#target b { font-size: 0.95rem; white-space: nowrap; }
+#target .bar { width: 7.5rem; height: 0.55rem; border-radius: 1rem; background: rgba(16,32,58,0.55); overflow: hidden; box-shadow: 0 0 0 2px rgba(16,32,58,0.75); }
+#target .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff5a6a, #ffd23a 50%, #6aff6a); transition: width 0.12s ease; }
+#target small { font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+/* the lobby: GO TO A PAD TO START A GAME! (the reference's console line) */
+#padHint { position: absolute; left: 50%; bottom: calc(max(0.6rem, env(safe-area-inset-bottom, 0px)) + 1.2rem); transform: translateX(-50%); padding: 0.45rem 1.2rem; border-radius: 0.5rem; background: rgba(10, 34, 26, 0.86); border: 2px solid #4aff8a; color: #8aff9a; font-family: "Consolas", "Courier New", monospace; font-weight: 700; letter-spacing: 0.1em; font-size: 1.15rem; white-space: nowrap; pointer-events: none; box-shadow: 0 0 1rem rgba(70, 255, 140, 0.35); }
+#padHint .cur { display: inline-block; width: 0.6rem; height: 1.15rem; margin-left: 0.35rem; background: #8aff9a; vertical-align: -0.2rem; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+body.inLobby #progress, body.inLobby #hotbar, body.inLobby #crosshair, body.inLobby #target, body.inLobby #btnLobby, body.inLobby #hint, body.inLobby #hitX, body.inLobby #fireBtn, body.inLobby #autoBtn, body.inLobby #fpBtn { display: none !important; }
+body:not(.inLobby) #padHint { display: none !important; }
+#hint { position: absolute; left: 50%; top: 72%; transform: translateX(-50%); font-size: 1.05rem; font-weight: 700; padding: 0.3rem 0.9rem; border-radius: 1rem; background: rgba(16,32,58,0.55); white-space: nowrap; pointer-events: none; }
+
+/* quest complete, big words */
+#questPop { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); display: flex; align-items: center; gap: 0.7rem; padding: 0.35rem 1.2rem 0.35rem 0.6rem; border-radius: 1.4rem; border: 0.22rem solid var(--ink); background: linear-gradient(#e0f8ff, #9ad8ff); box-shadow: 0 0.25rem 0 var(--ink); pointer-events: none; }
+#questPop .gi { font-size: 2.8rem; line-height: 1; }
+#questPop b { display: block; font-size: 1.7rem; line-height: 1; }
+#questPop small { display: block; font-size: 1rem; font-weight: 700; }
+#questPop.go { animation: qIn 2.8s cubic-bezier(0.2, 1.5, 0.4, 1) forwards; }
+@keyframes qIn { 0% { transform: translateX(-50%) scale(0.3); opacity: 0; } 10% { transform: translateX(-50%) scale(1.1); opacity: 1; } 18% { transform: translateX(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-1rem); } }
+#bigText { position: absolute; left: 50%; top: 23%; transform: translateX(-50%); font-family: "Montserrat", var(--font); font-size: 3.6rem; font-weight: 900; white-space: nowrap; pointer-events: none; }
+#bigText.go { animation: bigIn 2.2s cubic-bezier(0.2, 1.5, 0.4, 1) forwards; }
+@keyframes bigIn { 0% { transform: translateX(-50%) scale(0.2) rotate(-8deg); opacity: 0; } 12% { transform: translateX(-50%) scale(1.12) rotate(2deg); opacity: 1; } 22% { transform: translateX(-50%) scale(1) rotate(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) scale(1.05); } }
+#toasts { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); width: min(44rem, 92vw); display: grid; justify-items: center; gap: 0.3rem; pointer-events: none; }
+.toast { font-size: 1.25rem; font-weight: 700; padding: 0.1rem 0.5rem; animation: toastIn 2.8s ease forwards; text-align: center; line-height: 1.25; }
+@keyframes toastIn { 0% { opacity: 0; transform: translateY(0.6rem) scale(0.85); } 10% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-0.6rem); } }
+#tips { position: absolute; left: 50%; bottom: 7rem; transform: translateX(-50%); display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; font-size: 0.95rem; font-weight: 600; transition: opacity 0.8s ease; pointer-events: none; width: max-content; max-width: 90vw; }
+body:not(.inLobby) #tips { bottom: 9.4rem; }
+#tips kbd { display: inline-block; padding: 0.05rem 0.4rem; margin-right: 0.3rem; border: 2px solid #fff; border-radius: 0.35rem; background: rgba(16,32,58,0.55); font-family: var(--font); font-size: 0.85rem; }
+#promptBtn { position: absolute; left: 0; top: 0; transform: translate(-50%, -110%); will-change: transform; display: flex; align-items: center; gap: 0.45rem; padding: 0.3rem 0.8rem 0.3rem 0.35rem; background: rgba(16, 32, 58, 0.85); border: 2px solid rgba(255, 255, 255, 0.95); border-radius: 0.8rem; font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+#promptBtn kbd { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 0.4rem; background: #fff; color: var(--ink); font-family: var(--font); font-weight: 700; }
+
+/* CUBE DESTROYED! */
+#destroyed { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; gap: 0.35rem; background: radial-gradient(circle at 50% 45%, rgba(40,120,220,0.35), rgba(10,20,60,0.7)); z-index: 15; }
+#destroyed .rays { position: absolute; left: 50%; top: 45%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax; background: repeating-conic-gradient(rgba(255, 240, 140, 0.16) 0deg 10deg, transparent 10deg 20deg); animation: spin 14s linear infinite; mask-image: radial-gradient(circle, #000 12%, transparent 55%); -webkit-mask-image: radial-gradient(circle, #000 12%, transparent 55%); pointer-events: none; }
+#destroyed .t { position: relative; font-family: "Montserrat", var(--font); font-size: 4.4rem; font-weight: 900; color: #ffe24a; line-height: 1; animation: winPop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1); }
+#destroyed .s { position: relative; font-size: 1.5rem; font-weight: 700; }
+#destroyed .stats { position: relative; display: flex; gap: 0.6rem; margin: 0.4rem 0; flex-wrap: wrap; justify-content: center; }
+#destroyed .stat { display: grid; justify-items: center; min-width: 6.5rem; padding: 0.35rem 0.6rem; border-radius: 0.9rem; border: 0.2rem solid var(--ink); background: linear-gradient(#e0f6ff, #8ad0ff); box-shadow: 0 0.2rem 0 var(--ink); }
+#destroyed .stat small { font-size: 0.8rem; font-weight: 700; color: var(--ink); }
+#destroyed .stat b { font-size: 1.5rem; }
+#destroyed .first { position: relative; display: inline-block; font-size: 1.1rem; font-weight: 700; padding: 0.1rem 0.7rem; border-radius: 0.8rem; background: linear-gradient(#ff7ab8, #e8287a); border: 2px solid var(--ink); }
+#destroyed .acts { position: relative; display: flex; gap: 0.8rem; margin-top: 0.6rem; }
+#destroyed .acts .btn { font-size: 1.35rem; padding: 0.45rem 1.4rem; }
+@keyframes winPop { 0% { transform: scale(0.2) rotate(-12deg); } 100% { transform: scale(1); } }
+
+/* the "warp" between cubes, and the loading screen */
+#warp, #start { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 38%, #3aa8f0 0%, #1a5ac8 50%, #0a2a6a 100%); z-index: 40; }
+#warp { z-index: 30; }
+.loader { display: grid; justify-items: center; gap: 1rem; text-align: center; }
+.logo { font-family: "Montserrat", var(--font); font-size: 4.6rem; font-weight: 900; letter-spacing: 0.02em; line-height: 0.92; color: #fff; }
+.logo .c { display: block; color: #6af0ff; font-size: 5.4rem; }
+.logo small { display: block; font-family: var(--font); font-size: 1.4rem; font-weight: 700; margin-top: 0.5rem; color: #ffe24a; }
+.loadCube { width: 5.5rem; height: 5.5rem; border-radius: 1.2rem; border: 0.3rem solid var(--ink); background: linear-gradient(135deg, #8ad8ff, #2a8aff); box-shadow: inset 0.5rem 0.5rem 0 rgba(255,255,255,0.35), inset -0.4rem -0.4rem 0 rgba(0,0,0,0.12), 0 0.4rem 0 var(--ink), 0 0 2rem rgba(120,220,255,0.7); animation: loadBob 1.2s ease-in-out infinite; }
+@keyframes loadBob { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-0.7rem) rotate(8deg) scale(1.05); } }
+.loadBar { position: relative; width: min(24rem, 70vw); height: 1.6rem; border-radius: 1rem; border: 0.2rem solid var(--ink); background: rgba(255,255,255,0.35); overflow: hidden; }
+.loadBar i { position: absolute; left: 0; top: 0; bottom: 0; width: 8%; background: linear-gradient(#8af0ff, #2ab8ff); transition: width 0.4s ease; }
+.loadBar span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1rem; font-weight: 700; }
+#loading, #warpText { font-size: 1.35rem; font-weight: 700; }
+.err { color: #fff; max-width: 22rem; }
+
+/* Touch controls */
+#touch { position: absolute; inset: 0; pointer-events: none; }
+#stick { position: absolute; left: max(1.4rem, env(safe-area-inset-left, 0px)); bottom: max(2rem, env(safe-area-inset-bottom, 0px)); width: 9rem; height: 9rem; border-radius: 50%; background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.6); pointer-events: auto; touch-action: none; }
+#knob { position: absolute; left: 50%; top: 50%; width: 3.8rem; height: 3.8rem; margin: -1.9rem 0 0 -1.9rem; border-radius: 50%; background: rgba(255,255,255,0.9); border: 3px solid var(--ink); }
+#jumpBtn { position: absolute; right: max(1.2rem, env(safe-area-inset-right, 0px)); bottom: max(1.6rem, env(safe-area-inset-bottom, 0px)); width: 5.4rem; height: 5.4rem; border-radius: 50%; font-size: 1.1rem; pointer-events: auto; }
+#fireBtn { position: absolute; right: max(7.6rem, calc(env(safe-area-inset-right, 0px) + 6.6rem)); bottom: max(3.6rem, calc(env(safe-area-inset-bottom, 0px) + 2.4rem)); width: 7rem; height: 7rem; border-radius: 50%; font-size: 1.3rem; pointer-events: auto; display: grid; place-content: center; line-height: 1; }
+#fireBtn big { font-size: 2.4rem; display: block; }
+#fireBtn.on { filter: brightness(1.25); transform: scale(0.94); }
+#autoBtn { position: absolute; right: max(1.4rem, env(safe-area-inset-right, 0px)); bottom: max(8.4rem, calc(env(safe-area-inset-bottom, 0px) + 7.6rem)); width: 4.6rem; height: 2.6rem; border-radius: 1.3rem; font-size: 0.95rem; pointer-events: auto; }
+#autoBtn.on { background: linear-gradient(#8aff7a, #22c73a); }
+#fpBtn { position: absolute; right: max(1.4rem, env(safe-area-inset-right, 0px)); bottom: max(11.6rem, calc(env(safe-area-inset-bottom, 0px) + 10.8rem)); width: 3.2rem; height: 2.6rem; border-radius: 1.3rem; font-size: 1.2rem; pointer-events: auto; }
+body.touch #bag { bottom: auto; top: calc(max(8.5rem, 21vh) + 14rem); width: 5.2rem; height: 5.4rem; }
+body.touch #bag .bagIc { font-size: 3.7rem; }
+body.touch #bag b { font-size: 1.3rem; bottom: 0.5rem; }
+body.touch #hotbar { bottom: max(0.4rem, env(safe-area-inset-bottom, 0px)); }
+body.touch .slot { width: 3.4rem; height: 3.4rem; }
+body.touch .slot .ball { width: 2.2rem; height: 2.2rem; }
+body.touch #rightCol { top: max(6.5rem, 17vh); gap: 0.3rem; }
+body.touch .side .ic { width: 3rem; height: 3rem; font-size: 1.9rem; }
+body.touch #friendBoost, body.touch #tips { display: none; }
+body.touch #leftCol { top: max(7rem, 19vh); }
+body.touch .quest { font-size: 1.05rem; }
+
+/* Panels ---------------------------------------------------------------- */
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 30, 70, 0.45); z-index: 20; }
+.panel { position: relative; width: min(52rem, 94vw); max-height: min(40rem, 90vh); display: grid; grid-template-rows: auto auto 1fr; background: linear-gradient(#5ac8ff, #1a7ae8 60%, #1458c0); border: 0.25rem solid var(--ink); border-radius: 1.3rem; box-shadow: inset 0 0.3rem 0 rgba(255,255,255,0.35), 0 0.5rem 0 var(--ink), 0 1rem 2rem rgba(10,20,60,0.45); animation: panelIn 0.3s cubic-bezier(0.34, 1.6, 0.5, 1); }
+.panel::before { content: ''; position: absolute; left: 0.4rem; right: 0.4rem; top: 0.35rem; height: 30%; border-radius: 1rem 1rem 2rem 2rem; background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0)); pointer-events: none; }
+@keyframes panelIn { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.panel header { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.9rem 0.2rem; }
+.panel h2 { margin: 0; font-size: 2.3rem; }
+.x { width: 2.7rem; height: 2.7rem; padding: 0; font-size: 1.3rem; border-radius: 50%; }
+.tabs { display: flex; gap: 0.35rem; padding: 0 0.9rem 0.35rem; flex-wrap: wrap; }
+.tabs button { font-size: 0.95rem; padding: 0.25rem 0.75rem; border-width: 2px; }
+.tabs button.on { background: linear-gradient(#fff, #d8f0ff); color: var(--ink); text-shadow: none; }
+.body { overflow-y: auto; padding: 0.3rem 0.9rem 0.9rem; display: grid; gap: 0.5rem; align-content: start; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.body::-webkit-scrollbar { width: 0.6rem; } .body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.5); border-radius: 1rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 0.5rem; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.55rem; }
+.card { position: relative; display: grid; justify-items: center; align-content: start; gap: 0.2rem; padding: 0.5rem 0.4rem 0.55rem; border: 0.2rem solid var(--ink); border-radius: 0.9rem; background: linear-gradient(#e8f8ff, #a8dcff); color: var(--ink); box-shadow: inset 0 0.2rem 0 rgba(255,255,255,0.6), 0 0.15rem 0 var(--ink); text-align: center; transition: transform 0.18s cubic-bezier(0.34, 1.8, 0.5, 1); }
+.card:hover { transform: translateY(-3px) scale(1.03); }
+.card .ic { font-size: 2.6rem; line-height: 1.15; height: 3rem; display: grid; place-items: center; filter: drop-shadow(0 0.12rem 0 rgba(0,0,0,0.2)); }
+.card .nm { font-size: 1.05rem; font-weight: 700; line-height: 1.1; }
+.card .ds { font-size: 0.8rem; font-weight: 600; line-height: 1.15; min-height: 1.8em; color: #24406a; }
+.card .btn { font-size: 1rem; padding: 0.2rem 0.7rem; border-width: 2px; margin-top: 0.15rem; color: #fff; }
+.card.own { box-shadow: inset 0 0 0 0.2rem #46ec50, 0 0.15rem 0 var(--ink); }
+.card.lock { filter: grayscale(0.55) brightness(0.9); }
+.card.hot { background: linear-gradient(#fff4c8, #ffcf5a); }
+.card.gem { background: linear-gradient(#f8e8ff, #d8a8ff); }
+/* the upgrade cards (the reference's skill tree panel) */
+.up { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto auto; column-gap: 0.6rem; align-items: center; padding: 0.55rem 0.7rem; border: 0.2rem solid var(--ink); border-radius: 1rem; background: linear-gradient(#e8f8ff, #a8dcff); color: var(--ink); box-shadow: inset 0 0.2rem 0 rgba(255,255,255,0.6), 0 0.15rem 0 var(--ink); }
+.up .ic { grid-row: 1 / 4; font-size: 2.8rem; line-height: 1; filter: drop-shadow(0 0.15rem 0 rgba(0,0,0,0.2)); }
+.up .nm { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+.up .vv { font-size: 1rem; font-weight: 700; color: #1a5ac8; }
+.up .lv { font-size: 0.85rem; font-weight: 700; color: #4a6a9a; }
+.up .cost { grid-column: 3; grid-row: 1; justify-self: end; font-size: 1.05rem; font-weight: 700; color: #8a5a00; white-space: nowrap; }
+.up .btn { grid-column: 3; grid-row: 2 / 4; font-size: 1rem; padding: 0.25rem 0.8rem; border-width: 2px; color: #fff; }
+.up .pips { display: flex; gap: 2px; margin-top: 0.15rem; }
+.up .pips i { width: 0.6rem; height: 0.35rem; border-radius: 0.2rem; background: rgba(16,32,58,0.18); }
+.up .pips i.f { background: linear-gradient(#5ae0ff, #1a8ae8); }
+.sec { font-size: 1.15rem; font-weight: 700; margin: 0.3rem 0 0; }
+.note { margin: 0; font-size: 0.88rem; font-weight: 600; }
+.row { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; border: 0.2rem solid var(--ink); border-radius: 0.8rem; background: rgba(255,255,255,0.2); flex-wrap: wrap; }
+.row .ic { font-size: 1.8rem; }
+.row .tx { flex: 1; display: grid; min-width: 8rem; }
+.row .tx b { font-size: 1.05rem; }
+.row .tx small { font-size: 0.82rem; }
+.row .btn { font-size: 0.95rem; padding: 0.2rem 0.7rem; border-width: 2px; }
+.row input[type=range] { flex: 1; accent-color: #fff; min-width: 6rem; }
+.input { font-family: var(--font); font-size: 1rem; padding: 0.35rem 0.6rem; border: 3px solid var(--ink); border-radius: 0.6rem; flex: 1; min-width: 0; }
+.card2 { position: relative; display: grid; justify-items: center; gap: 0.5rem; width: min(24rem, 90vw); padding: 1.2rem 1.2rem 1rem; background: linear-gradient(#5ac8ff, #1a7ae8 60%, #1458c0); border: 0.25rem solid var(--ink); border-radius: 1.2rem; box-shadow: 0 0.5rem 0 var(--ink); text-align: center; animation: panelIn 0.3s cubic-bezier(0.34, 1.6, 0.5, 1); }
+.card2 h2 { margin: 0; font-size: 1.8rem; }
+.card2 .big-ic { font-size: 3.6rem; height: 4rem; display: grid; place-items: center; }
+.card2 .acts { display: flex; gap: 0.6rem; }
+.card2 .acts .btn { font-size: 1.15rem; padding: 0.35rem 1.2rem; }
+.card2 .x { position: absolute; right: -0.8rem; top: -0.8rem; }
+.cost { font-size: 1.3rem; font-weight: 700; color: #ffe24a; }
+/* cube select */
+.cubeCard { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; border: 0.2rem solid var(--ink); border-radius: 1rem; background: linear-gradient(#e8f8ff, #a8dcff); color: var(--ink); box-shadow: 0 0.15rem 0 var(--ink); }
+.cubeCard .sw { width: 3rem; height: 3rem; border-radius: 0.7rem; border: 0.18rem solid var(--ink); box-shadow: inset 0.3rem 0.3rem 0 rgba(255,255,255,0.35), inset -0.25rem -0.25rem 0 rgba(0,0,0,0.15); }
+.cubeCard b { font-size: 1.15rem; }
+.cubeCard small { display: block; font-size: 0.82rem; font-weight: 600; color: #34507a; }
+.cubeCard .btn { font-size: 1rem; padding: 0.25rem 0.9rem; border-width: 2px; color: #fff; }
+.cubeCard.here { box-shadow: inset 0 0 0 0.2rem #2a8aff, 0 0.15rem 0 var(--ink); }
+.cubeCard.lock { filter: grayscale(0.6) brightness(0.88); }
+/* Daily */
+.dailyCards { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; width: min(40rem, 92vw); }
+.dcard { display: grid; justify-items: center; gap: 0.1rem; padding: 0.4rem 0.1rem; border: 0.18rem solid var(--ink); border-radius: 0.7rem; background: rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 700; text-align: center; }
+.dcard .d { font-size: 0.85rem; }
+.dcard .i { font-size: 1.5rem; }
+.dcard.done { opacity: 0.55; }
+.dcard.now { background: linear-gradient(#ffe86a, #ffb81c); color: #3a2000; animation: pulse 1.2s ease-in-out infinite; }
+
+/* a short (landscape) phone: the camera button sits left of FIRE, clear of the side buttons */
+@media (max-height: 520px) {
+    #fpBtn { bottom: max(7.4rem, calc(env(safe-area-inset-bottom, 0px) + 6.6rem)); right: max(15.6rem, calc(env(safe-area-inset-right, 0px) + 14.2rem)); }
+}
+@media (max-width: 760px), (max-height: 520px) {
+    :root { font-size: clamp(8px, calc(100vmin / 44), 14px); }
+    .panel h2 { font-size: 1.6rem; }
+    #destroyed .t { font-size: 3rem; }
+    #tutTxt { font-size: 1.7rem; }
+    #bigText { font-size: 2.6rem; }
+    .ib { width: 2.95rem; height: 3.35rem; }
+    .ib .bub { width: 2.5rem; height: 2.5rem; font-size: 1.3rem; }
+    .logo { font-size: 3.2rem; } .logo .c { font-size: 3.8rem; }
+}
+@media (max-aspect-ratio: 1/1) {
+    #iconRow { flex-wrap: wrap; justify-content: flex-end; width: 7rem; row-gap: 0.3rem; }
+    #topBar { width: 56vw; left: 44%; }
+    #leftCol { top: max(11rem, 24vh); }
+}
+body.lowfx .sheen, body.lowfx #progress .sheen, body.lowfx .loadCube, body.lowfx .side.offer .ic { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+    .toast, #destroyed .rays, .dcard.now, .sheen, .loadCube, #questPop.go, #bigText.go { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+    <canvas id="view" tabindex="0" aria-label="Game view"></canvas>
+    <canvas id="speedLines" aria-hidden="true"></canvas>
+    <div id="vignette" aria-hidden="true"></div>
+
+    <div id="hud" hidden>
+        <div id="flash" class="passive" aria-hidden="true"></div>
+        <div id="dmgEdge" class="passive" aria-hidden="true"></div>
+
+        <div id="topBar">
+            <div id="progress" class="passive"><div id="progFill"></div><span class="sheen"></span><span id="progTxt" class="o1">0% Progress</span></div>
+            <div id="cubeLine" class="o1 passive">🟦 Sky Cube</div>
+            <div id="tutBanner" class="passive" hidden><span id="tutTxt" class="o">Break cubes (0/5)</span><span id="tutTip" class="o1"></span><div id="tutBar"><i></i></div></div>
+            <div id="chips"><button class="chip o1" id="giftChip">🎁 Gift in 1:00</button><span class="chip o1 passive" id="chipCoins" hidden>💰 x2 0:00</span><span class="chip o1 passive" id="chipDmg" hidden>💥 x2 0:00</span><span class="chip o1 passive" id="chipFire" hidden>⚡ 0:00</span></div>
+        </div>
+
+        <div id="leftCol">
+            <button class="pill o" id="coinPill" aria-label="Coins"><span class="coin"></span><b id="coinVal">0</b></button>
+            <button class="pill o" id="gemPill" aria-label="Gems: open the Gem Shop"><span class="gemI">💎</span><b id="gemVal">0</b><span class="plus">+</span></button>
+            <div id="quests"></div>
+        </div>
+
+        <button id="bag" aria-label="Backpack"><span class="bagIc">🎒</span><b class="o" id="bagTxt">0/10</b><small class="o1" id="bagVal"></small><span id="fullTag" class="o1" hidden>FULL! Sell!</span></button>
+
+        <div id="rightCol">
+            <button class="side" id="btnUp" aria-label="Upgrades"><span class="ic">🖥️</span><span class="lb o1">UPGRADES</span><span class="badge" id="upBadge" hidden>!</span></button>
+            <button class="side" id="btnShop" aria-label="Shop"><span class="ic">🛒</span><span class="lb o1">SHOP</span></button>
+            <button class="side" id="btnCubes" aria-label="Cube select"><span class="ic">🧊</span><span class="lb o1">CUBES</span><span class="badge" id="cubeBadge" hidden>NEW</span></button>
+            <button class="side" id="btnLobby" aria-label="Back to the lobby"><span class="ic">🏠</span><span class="lb o1">LOBBY</span></button>
+            <button class="side offer" id="btnInstant" aria-label="Instant Sell Magnet"><span class="ic">🧲</span><span class="lb o1">INSTANT SELL</span><span class="price o1">💎 12</span></button>
+        </div>
+
+        <div id="iconRow">
+            <button class="ib" id="btnDaily" aria-label="Daily rewards"><span class="bub" style="--bg:linear-gradient(#e0f6ff,#7ad0ff)">📅</span><span class="lb o1">Daily</span><span class="badge" id="dailyBadge" hidden>!</span></button>
+            <button class="ib" id="btnGift" aria-label="Playtime gifts"><span class="bub" style="--bg:linear-gradient(#ffe0f0,#ff8ad0)">🎁</span><span class="lb o1">Gifts</span><span class="badge" id="giftBadge" hidden>!</span></button>
+            <button class="ib" id="btnInvite" aria-label="Invite friends"><span class="bub" style="--bg:linear-gradient(#f0e8ff,#c4a0ff)">👥</span><span class="lb o1">Invite</span></button>
+            <button class="ib" id="btnConfig" aria-label="Settings"><span class="bub" style="--bg:linear-gradient(#ffffff,#d0dcec)">⚙️</span><span class="lb o1">Settings</span></button>
+        </div>
+
+        <div id="friendBoost" class="o1 passive">Friend Boost: 0%</div>
+        <div id="hotbar"><div id="gunName" class="o1 passive">🔫 Bubble Blaster</div><div id="slots"></div></div>
+        <div id="crosshair"><i></i></div>
+        <div id="hitX" class="passive"><i></i><i></i><i></i><i></i></div>
+        <div id="target" class="passive" hidden><b class="o1" id="tgName">Block</b><div class="bar"><i id="tgBar"></i></div><small class="o1" id="tgHp"></small></div>
+        <div id="padHint" class="passive"><span id="padTxt">GO TO A PAD TO START A GAME!</span><span class="cur"></span></div>
+        <div id="hint" class="o1" hidden></div>
+
+        <div id="questPop" hidden><span class="gi">💎</span><span><b class="o" id="qpTitle">+1 GEMS</b><small class="o1" id="qpSub">Quest complete!</small></span></div>
+        <div id="bigText" class="o" hidden>QUEST COMPLETE!</div>
+        <div id="toasts"></div>
+        <div id="tips" class="o1" hidden></div>
+        <button id="promptBtn" hidden><kbd>E</kbd><span id="promptTxt"></span></button>
+        <div id="fps" class="o1 passive" hidden>60 FPS</div>
+
+        <div id="destroyed" hidden>
+            <div class="rays"></div>
+            <div class="t o">CUBE DESTROYED!</div>
+            <div class="s o" id="dsName">🟦 Sky Cube</div>
+            <div class="stats" id="dsStats"></div>
+            <div><span class="first o1" id="dsFirst">⭐ FIRST TIME: x2 REWARDS!</span></div>
+            <div class="s o1" id="dsNext"></div>
+            <div class="acts"><button class="btn g-green o" id="dsGo">▶ NEXT CUBE</button><button class="btn g-blue o" id="dsStay">🔁 Stay</button><button class="btn g-purple o" id="dsLobby">🏠 Lobby</button></div>
+        </div>
+
+        <div id="touch" hidden>
+            <div id="stick"><div id="knob"></div></div>
+            <button class="btn g-blue o" id="jumpBtn">JUMP</button>
+            <button class="btn g-orange o" id="fireBtn"><big>💥</big>FIRE</button>
+            <button class="btn g-grey o1" id="autoBtn">AUTO</button>
+            <button class="btn g-grey o1" id="fpBtn" aria-label="First person">👁️</button>
+        </div>
+    </div>
+
+    <div id="modal" class="overlay" hidden>
+        <div class="panel">
+            <header><h2 class="o" id="modalTitle">SHOP</h2><button class="btn g-red x o1" id="modalClose" aria-label="Close">X</button></header>
+            <div class="tabs" id="modalTabs"></div>
+            <div class="body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <div id="confirm" class="overlay" hidden>
+        <div class="card2">
+            <button class="btn g-red x o" id="confirmClose" aria-label="Close">X</button>
+            <div class="big-ic" id="confirmIc">🛒</div>
+            <h2 class="o" id="confirmTitle">Buy?</h2>
+            <div class="o1" id="confirmText"></div>
+            <div class="cost o1" id="confirmCost"></div>
+            <div class="acts"><button class="btn g-green o" id="confirmYes">Buy</button><button class="btn g-grey o" id="confirmNo">Cancel</button></div>
+            <small class="o1" id="confirmNote"></small>
+        </div>
+    </div>
+
+    <div id="daily" class="overlay" hidden>
+        <div class="card2" style="width:min(44rem,94vw)">
+            <button class="btn g-red x o" id="dailyClose" aria-label="Close">X</button>
+            <h2 class="o">📅 Daily Rewards</h2>
+            <div class="dailyCards" id="dailyCards"></div>
+            <div class="o1" id="dailyLeft">Your daily reward is ready!</div>
+            <button class="btn g-yellow o" id="dailyClaim" style="font-size:1.3rem;padding:0.35rem 2rem">CLAIM</button>
+        </div>
+    </div>
+
+    <div id="offline" class="overlay" hidden>
+        <div class="card2">
+            <h2 class="o">Disconnected</h2>
+            <p class="o1">The connection to the server was lost.</p>
+            <div class="acts"><button class="btn g-green o" id="reconnectBtn">Rejoin</button></div>
+        </div>
+    </div>
+
+    <div id="warp" hidden>
+        <div class="loader">
+            <div class="loadCube" id="warpCube" aria-hidden="true"></div>
+            <div class="logo o" id="warpTitle">CUBE 2</div>
+            <div class="loadBar"><i id="warpBar"></i><span class="o1" id="warpText">Charging the blaster…</span></div>
+        </div>
+    </div>
+
+    <div id="start">
+        <div class="loader">
+            <div class="loadCube" aria-hidden="true"></div>
+            <div class="logo o">DESTROY<span class="c">THE CUBE!</span><small class="o1">[ASMR] Blast it. Collect it. Sell it.</small></div>
+            <div class="loadBar"><i id="loadBar"></i><span class="o1" id="loading">Loading…</span></div>
+            <div class="err o1" id="connectErr" hidden></div>
+            <button class="btn g-green o" id="playBtn" hidden>Try again</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://sdk.bloxity.io/v1/legion-sdk.min.js"></script>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
